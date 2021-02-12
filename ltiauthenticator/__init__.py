@@ -2,7 +2,8 @@ import time
 import os
 
 from traitlets import Dict
-from tornado import gen, web, access_log
+from tornado import gen, web
+from tornado.log import access_log
 
 from jupyterhub.auth import Authenticator
 from jupyterhub.handlers import BaseHandler
