@@ -4,7 +4,7 @@ setup(
     name='jupyterhub-ltiauthenticator',
     version='1.0.1.dev',
     description='JupyterHub authenticator implementing LTI v1',
-    url='https://github.com/yuvipanda/jupyterhub-ltiauthenticator',
+    url='https://github.com/fh-swf-hgi/jupyterhub-ltiauthenticator',
     author='Yuvi Panda',
     author_email='yuvipanda@gmail.com',
     license='3 Clause BSD',
