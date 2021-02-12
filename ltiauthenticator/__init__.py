@@ -1,7 +1,8 @@
 import time
+import os
 
 from traitlets import Dict
-from tornado import gen, web
+from tornado import gen, web, access_log
 
 from jupyterhub.auth import Authenticator
 from jupyterhub.handlers import BaseHandler
@@ -132,6 +133,7 @@ class LTIAuthenticator(Authenticator):
         args = {}
         for k, values in handler.request.body_arguments.items():
             args[k] = values[0].decode() if len(values) == 1 else [v.decode() for v in values]
+            access_log.info(f"body_args: {k} => {values}")
 
         # handle multiple layers of proxied protocol (comma separated) and take the outermost
         if 'x-forwarded-proto' in handler.request.headers:
@@ -163,10 +165,73 @@ class LTIAuthenticator(Authenticator):
             else:
                 user_id = handler.get_body_argument('user_id')
 
-            return {
-                'name': user_id,
+            #return {
+            #    'name': user_id,
+            #    'auth_state': {k: v for k, v in args.items() if not k.startswith('oauth_')}
+            #}
+            
+            # Vor- und Nachname in der Form 'nachname_vorname':
+            # user_name = handler.get_body_argument('lis_person_name_family') + "_" + handler.get_body_argument('lis_person_name_given')
+            # Erster Teil der Mailadresse (alles vor dem '@'):
+            user_name = handler.get_body_argument(
+                'lis_person_contact_email_primary')
+            user_name = user_name.split("@")[0]  # '@...' entfernen
+
+            # Enable the formgrader and the course_list for instructors
+            # Fix this if you want to have more extensions than nbgrader
+            active = 'false'
+            if handler.get_body_argument('roles') == 'Instructor':
+                active = 'true'
+            home_dir = '/home/jupyter-' + user_name
+            jupyter_conf_dir = os.path.join(home_dir, '.jupyter')
+            if os.path.exists(jupyter_conf_dir):
+                path = os.path.join(jupyter_conf_dir, 'nbconfig', 'tree.json')
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                extensions = (
+                    '{\n'
+                    '  "load_extensions": {\n'
+                    '    "formgrader/main": ' + active + ',\n'
+                    '    "assignment_list/main": true,\n'
+                    '    "course_list/main": ' + active + '\n'
+                    '  }\n'
+                    '}'
+                )
+                with open(path, 'w') as file:
+                    file.write(extensions)
+
+            # Create a log-file with required parameters for nbgrader
+            # Exception handling if there are no LTI-Parameters for grade passback
+            try:
+                # 1. Create the path for the log-files
+                course = str(handler.get_body_argument(
+                    'context_label')).split(' ')[0].lower()
+                assignment = handler.get_body_argument('resource_link_title')
+                path = '/srv/nbgrader/exchange/' + course + '/inbound/log/' + \
+                    assignment + '/jupyter-' + user_name + '.txt'
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                # 2. Store required_parameters for grade passback
+                required_parameters = {
+                    'lis_outcome_service_url': handler.get_body_argument('lis_outcome_service_url'),
+                    'lis_result_sourcedid': handler.get_body_argument('lis_result_sourcedid')
+                }
+                # 3. Open the file and write the parameters
+                with open(path, 'w') as file:
+                    for key, value in required_parameters.items():
+                        file.write(value + '\n')
+
+            except:
+                access_log.info("No LTI-Parameters for grade passback")
+
+            os.environ['USER_ROLE'] = 'unknown'
+
+            state = {
+                'name': user_name,
                 'auth_state': {k: v for k, v in args.items() if not k.startswith('oauth_')}
             }
+
+            access_log.info(f"authenticate: {state}")
+            return state
+        
 
 
     def login_url(self, base_url):
