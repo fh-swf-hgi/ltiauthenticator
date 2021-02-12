@@ -6,7 +6,7 @@ setup(
     description='JupyterHub authenticator implementing LTI v1',
     url='https://github.com/fh-swf-hgi/jupyterhub-ltiauthenticator',
     author='Yuvi Panda',
-    author_email='yuvipanda@gmail.com',
+    author_email='giefers.heiner@fh-swf.de',
     license='3 Clause BSD',
     packages=find_packages(),
     python_requires=">=3.6",
