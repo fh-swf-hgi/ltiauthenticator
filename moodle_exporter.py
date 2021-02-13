@@ -20,7 +20,7 @@ class MoodleExporter(ExportPlugin):
 
                     # Check if file with lis-Parameters exists
                     path = (
-                        '/opt/tljh/exchange/' + assignment.course_id + ''
+                        '/srv/nbgrader/exchange/' + assignment.course_id + ''
                         '/inbound/log/' + assignment.name + ''
                         '/' + student.id + '.txt'
                     )
@@ -59,8 +59,8 @@ class MoodleExporter(ExportPlugin):
     def post_grades(self, parameters):
         
         # Secret of the external Tool
-        consumer_key = 'aef4193cf141d02a2adde6a9d5afaff028d9bf23139a4d1def1ee224f7682ca0'
-        consumer_secret = 'f0b884c83c858fd8078bd187c0c54c281a32df2653401b0c415dec63580dc847'
+        consumer_key = '5769a1a29a1b101ffdaa06048793c59b19b4c252eb651d03872048a30f8db283'
+        consumer_secret = 'c732af9c6235cc8530d24bcab00a0e70704ac550cd0434a3d1a298e124bbd590'
 
         # Create POST-Request
         outcome_request = OutcomeRequest({
