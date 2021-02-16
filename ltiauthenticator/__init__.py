@@ -204,8 +204,10 @@ class LTIAuthenticator(Authenticator):
             # Exception handling if there are no LTI-Parameters for grade passback
             try:
                 # 1. Create the path for the log-files
-                course = str(handler.get_body_argument(
-                    'context_label')).split(' ')[0].lower()
+                # This way, the course name from Moodel is used
+                # course = str(handler.get_body_argument('context_label')).split(' ')[0].lower()
+                # Take the course name from the exchange dir
+                course = os.listdir("/srv/nbgrader/exchange")[0]
                 assignment = handler.get_body_argument('resource_link_title')
                 path = '/srv/nbgrader/exchange/' + course + '/inbound/log/' + \
                     assignment + '/jupyter-' + user_name + '.txt'
